@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记账本</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+            background: #0a0a14;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 15% 20%, rgba(34, 197, 94, 0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 85% 80%, rgba(251, 191, 36, 0.14) 0%, transparent 60%),
+                linear-gradient(135deg, #0a0a14 0%, #0f1a14 50%, #14142b 100%);
+            background-attachment: fixed;
+            padding: 20px;
+            color: #e2e8f0;
+            line-height: 1.5;
+        }
+
+        .app {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(15, 18, 36, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            padding: 18px 20px 10px;
+        }
+
+        .title {
+            font-size: 13px;
+            letter-spacing: 6px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .total {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 1px;
+        }
+
+        .total-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e2e8f0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* 表单区 */
+        .form-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 14px;
+            letter-spacing: 1px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .amount-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .amount-input {
+            width: 100%;
+            padding: 12px 16px 12px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #f8fafc;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .amount-input::placeholder { color: #475569; font-weight: 400; }
+
+        .amount-input:focus {
+            border-color: rgba(251, 191, 36, 0.5);
+            background: rgba(255, 255, 255, 0.07);
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+        }
+
+        .amount-prefix {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #fbbf24;
+            font-size: 16px;
+            font-weight: 700;
+            pointer-events: none;
+        }
+
+        .cats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .cat-btn {
+            padding: 10px 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: #94a3b8;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .cat-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+        }
+
+        .cat-btn.active {
+            background: var(--cat-bg);
+            border-color: var(--cat-color);
+            color: var(--cat-color);
+            box-shadow: 0 0 12px var(--cat-glow);
+        }
+
+        .cat-btn .icon {
+            font-size: 18px;
+            display: block;
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+
+        .note-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+        }
+
+        .note-input::placeholder { color: #475569; }
+
+        .note-input:focus {
+            border-color: rgba(251, 191, 36, 0.5);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #84cc16, #65a30d);
+            color: #0a0a14;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            letter-spacing: 1px;
+            box-shadow: 0 6px 20px rgba(132, 204, 22, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(132, 204, 22, 0.45);
+        }
+
+        .add-btn:active { transform: translateY(0); }
+
+        /* 记录列表 */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .list-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+
+        .clear-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .clear-btn:hover { color: #ef4444; background: rgba(239, 68, 68, 0.08); }
+
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .list::-webkit-scrollbar { width: 5px; }
+        .list::-webkit-scrollbar-track { background: transparent; }
+        .list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 3px solid var(--cat-color);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            animation: slideIn 0.25s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(2px);
+        }
+
+        .item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--cat-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-cat {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 2px;
+        }
+
+        .item-meta {
+            font-size: 11px;
+            color: #64748b;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .item-note {
+            color: #94a3b8;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 160px;
+        }
+
+        .item-amount {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--cat-color);
+            font-variant-numeric: tabular-nums;
+            flex-shrink: 0;
+        }
+
+        .item-del {
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: #475569;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            flex-shrink: 0;
+        }
+
+        .item-del:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        .empty-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            opacity: 0.4;
+        }
+
+        @media (max-width: 520px) {
+            body { padding: 10px 8px; }
+            .app { gap: 10px; }
+            .card { padding: 16px 14px; border-radius: 14px; }
+            .header { padding: 14px 14px 8px; }
+            .total { font-size: 30px; letter-spacing: 0.5px; }
+            .title { font-size: 12px; letter-spacing: 4px; }
+
+            /* 1. 统计卡片改为 2×2 网格卡片 */
+            .stat-row {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding-top: 0;
+                margin-top: 12px;
+                border-top: none;
+            }
+            .stat-row .stat {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: flex-start;
+                padding: 12px 14px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-bottom: none;
+            }
+            .stat-row .stat:nth-child(1) { background: linear-gradient(135deg, rgba(251,191,36,0.20), rgba(245,158,11,0.10)); border-color: rgba(251,191,36,0.25); }
+            .stat-row .stat:nth-child(2) { background: linear-gradient(135deg, rgba(56,189,248,0.20), rgba(14,165,233,0.10)); border-color: rgba(56,189,248,0.25); }
+            .stat-row .stat:nth-child(3) { background: linear-gradient(135deg, rgba(167,139,250,0.20), rgba(124,58,237,0.10)); border-color: rgba(167,139,250,0.25); grid-column: span 2; }
+            .stat-num { font-size: 22px; font-weight: 800; letter-spacing: 0.5px; }
+            .stat-label { font-size: 10px; color: #94a3b8; margin-top: 4px; letter-spacing: 0.5px; }
+
+            /* 2. 分类按钮占满宽度 */
+            .cats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            .cat-btn {
+                padding: 12px 8px;
+                font-size: 12px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+            }
+            .cat-btn .icon { font-size: 18px; margin-bottom: 0; }
+
+            /* 金额输入框占满 */
+            .form-row { display: block; margin-bottom: 10px; }
+            .amount-wrap { display: block; }
+            .amount-input { width: 100%; }
+
+            .note-input { margin-bottom: 10px; }
+
+            /* 3. 记录列表间距字体缩小 */
+            .list { gap: 6px; }
+            .item {
+                padding: 10px 12px;
+                gap: 10px;
+                border-radius: 10px;
+            }
+            .item-icon {
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+                border-radius: 8px;
+            }
+            .item-cat { font-size: 12px; }
+            .item-meta { font-size: 10px; gap: 4px; }
+            .item-note { max-width: 100px; }
+            .item-amount { font-size: 15px; }
+            .item-del { width: 22px; height: 22px; font-size: 14px; }
+
+            .list-title { font-size: 12px; }
+            .clear-btn { font-size: 11px; }
+        }
+
+        @media (max-width: 360px) {
+            .cats { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+            .cat-btn { padding: 10px 6px; font-size: 11px; }
+            .cat-btn .icon { font-size: 16px; }
+            .total { font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- 总览卡 -->
+        <div class="card header">
+            <div class="title">记账本</div>
+            <div class="total" id="total">¥0.00</div>
+            <div class="total-label">本月总花费</div>
+            <div class="stat-row">
+                <div class="stat">
+                    <div class="stat-num" id="statCount">0</div>
+                    <div class="stat-label">笔数</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-num" id="statAvg">¥0</div>
+                    <div class="stat-label">平均</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-num" id="statMax">¥0</div>
+                    <div class="stat-label">最大</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 录入卡 -->
+        <div class="card">
+            <div class="form-title">添加一笔</div>
+            <div class="form-row">
+                <div class="amount-wrap">
+                    <span class="amount-prefix">¥</span>
+                    <input type="number" class="amount-input" id="amount" placeholder="金额" step="0.01" min="0">
+                </div>
+            </div>
+            <div class="cats" id="cats"></div>
+            <input type="text" class="note-input" id="note" placeholder="备注（可选）" maxlength="30">
+            <button class="add-btn" id="addBtn">记一笔</button>
+        </div>
+
+        <!-- 列表卡 -->
+        <div class="card">
+            <div class="list-header">
+                <div class="list-title">消费记录</div>
+                <button class="clear-btn" id="clearBtn">清空全部</button>
+            </div>
+            <div class="list" id="list"></div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        // 分类配置
+        const CATS = {
+            meal:    { name: '餐饮', icon: '🍱', color: '#fbbf24', bg: 'rgba(251,191,36,0.15)', glow: 'rgba(251,191,36,0.3)' },
+            transit: { name: '交通', icon: '🚌', color: '#38bdf8', bg: 'rgba(56,189,248,0.15)', glow: 'rgba(56,189,248,0.3)' },
+            shop:    { name: '购物', icon: '🛍️', color: '#a78bfa', bg: 'rgba(167,139,250,0.15)', glow: 'rgba(167,139,250,0.3)' },
+            fun:     { name: '娱乐', icon: '🎮', color: '#f472b6', bg: 'rgba(244,114,182,0.15)', glow: 'rgba(244,114,182,0.3)' }
+        };
+        const CAT_KEYS = ['meal', 'transit', 'shop', 'fun'];
+
+        // DOM
+        const totalEl = document.getElementById('total');
+        const statCount = document.getElementById('statCount');
+        const statAvg = document.getElementById('statAvg');
+        const statMax = document.getElementById('statMax');
+        const amountInput = document.getElementById('amount');
+        const noteInput = document.getElementById('note');
+        const catsEl = document.getElementById('cats');
+        const addBtn = document.getElementById('addBtn');
+        const listEl = document.getElementById('list');
+        const clearBtn = document.getElementById('clearBtn');
+
+        // 状态
+        let records = JSON.parse(localStorage.getItem('ledger_records') || '[]');
+        let selectedCat = 'meal';
+
+        function save() {
+            localStorage.setItem('ledger_records', JSON.stringify(records));
+        }
+
+        function monthKey() {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        }
+
+        function renderCats() {
+            catsEl.innerHTML = '';
+            CAT_KEYS.forEach(k => {
+                const c = CATS[k];
+                const btn = document.createElement('button');
+                btn.className = 'cat-btn' + (selectedCat === k ? ' active' : '');
+                btn.style.setProperty('--cat-color', c.color);
+                btn.style.setProperty('--cat-bg', c.bg);
+                btn.style.setProperty('--cat-glow', c.glow);
+                btn.innerHTML = '<span class="icon">' + c.icon + '</span>' + c.name;
+                btn.addEventListener('click', () => {
+                    selectedCat = k;
+                    renderCats();
+                });
+                catsEl.appendChild(btn);
+            });
+        }
+
+        function formatMoney(n) {
+            return '¥' + Number(n).toFixed(2);
+        }
+
+        function formatTime(ts) {
+            const d = new Date(ts);
+            const now = new Date();
+            const sameDay = d.toDateString() === now.toDateString();
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            if (sameDay) return '今天 ' + hh + ':' + mm;
+            const mo = String(d.getMonth() + 1).padStart(2, '0');
+            const da = String(d.getDate()).padStart(2, '0');
+            return mo + '/' + da + ' ' + hh + ':' + mm;
+        }
+
+        function renderStats() {
+            const monthRecords = records.filter(r => r.month === monthKey());
+            const total = monthRecords.reduce((s, r) => s + r.amount, 0);
+            const count = monthRecords.length;
+            const avg = count > 0 ? total / count : 0;
+            const max = count > 0 ? Math.max(...monthRecords.map(r => r.amount)) : 0;
+
+            totalEl.textContent = formatMoney(total);
+            statCount.textContent = count;
+            statAvg.textContent = formatMoney(avg);
+            statMax.textContent = formatMoney(max);
+        }
+
+        function renderList() {
+            listEl.innerHTML = '';
+            if (records.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'empty';
+                empty.innerHTML = '<div class="empty-icon">📒</div>还没有记录，添加第一笔吧';
+                listEl.appendChild(empty);
+                return;
+            }
+            // 倒序显示（新的在上）
+            const sorted = [...records].sort((a, b) => b.ts - a.ts);
+            sorted.forEach(r => {
+                const c = CATS[r.cat] || CATS.meal;
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.style.setProperty('--cat-color', c.color);
+                item.style.setProperty('--cat-bg', c.bg);
+
+                const icon = document.createElement('div');
+                icon.className = 'item-icon';
+                icon.textContent = c.icon;
+
+                const info = document.createElement('div');
+                info.className = 'item-info';
+                info.innerHTML =
+                    '<div class="item-cat">' + c.name + '</div>' +
+                    '<div class="item-meta">' +
+                        '<span>' + formatTime(r.ts) + '</span>' +
+                        (r.note ? '<span class="item-note">' + escapeHtml(r.note) + '</span>' : '') +
+                    '</div>';
+
+                const amount = document.createElement('div');
+                amount.className = 'item-amount';
+                amount.textContent = '-' + formatMoney(r.amount);
+
+                const del = document.createElement('button');
+                del.className = 'item-del';
+                del.innerHTML = '×';
+                del.title = '删除';
+                del.addEventListener('click', () => removeRecord(r.id));
+
+                item.appendChild(icon);
+                item.appendChild(info);
+                item.appendChild(amount);
+                item.appendChild(del);
+                listEl.appendChild(item);
+            });
+        }
+
+        function escapeHtml(s) {
+            return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+        }
+
+        function render() {
+            renderStats();
+            renderList();
+        }
+
+        function add() {
+            const amount = parseFloat(amountInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                amountInput.focus();
+                amountInput.style.borderColor = '#ef4444';
+                setTimeout(() => amountInput.style.borderColor = '', 800);
+                return;
+            }
+            const note = noteInput.value.trim();
+            records.push({
+                id: Date.now() + Math.random().toString(36).slice(2, 6),
+                amount: Math.round(amount * 100) / 100,
+                cat: selectedCat,
+                note: note,
+                ts: Date.now(),
+                month: monthKey()
+            });
+            save();
+            render();
+            // 清空输入
+            amountInput.value = '';
+            noteInput.value = '';
+            amountInput.focus();
+        }
+
+        function removeRecord(id) {
+            records = records.filter(r => r.id !== id);
+            save();
+            render();
+        }
+
+        function clearAll() {
+            if (records.length === 0) return;
+            if (confirm('确定清空所有记录吗？此操作不可恢复。')) {
+                records = [];
+                save();
+                render();
+            }
+        }
+
+        addBtn.addEventListener('click', add);
+        clearBtn.addEventListener('click', clearAll);
+        amountInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') noteInput.focus();
+        });
+        noteInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') add();
+        });
+
+        renderCats();
+        render();
+    })();
+    </script>
+</body>
+</html>

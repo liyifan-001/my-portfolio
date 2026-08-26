@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>番茄钟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+            background: #94a3b8;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 15% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 85% 80%, rgba(0, 0, 0, 0.1) 0%, transparent 60%),
+                linear-gradient(135deg, #94a3b8 0%, #64748b 50%, #475569 100%);
+            transition: background 0.5s ease;
+            padding: 20px;
+        }
+
+        body.running {
+            background: #ef4444;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 15% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 85% 80%, rgba(120, 20, 20, 0.3) 0%, transparent 60%),
+                linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%);
+        }
+
+        body.break {
+            background: #22c55e;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 15% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 85% 80%, rgba(20, 83, 45, 0.3) 0%, transparent 60%),
+                linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #16a34a 100%);
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 14px;
+            letter-spacing: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        /* 圆形进度条容器 */
+        .timer-wrap {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 36px;
+        }
+
+        .ring-bg {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.15);
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.25),
+                inset 0 2px 6px rgba(255, 255, 255, 0.1);
+        }
+
+        .ring-progress {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(
+                #fff 0deg,
+                rgba(255, 255, 255, 0.95) 360deg
+            );
+            mask: radial-gradient(circle, transparent 64%, #000 65%);
+            -webkit-mask: radial-gradient(circle, transparent 64%, #000 65%);
+            transition: background 0.1s linear;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+        }
+
+        body.running .ring-progress {
+            background: conic-gradient(
+                #fde047 0deg,
+                #fbbf24 360deg
+            );
+            filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.5));
+        }
+
+        body.break .ring-progress {
+            background: conic-gradient(
+                #bbf7d0 0deg,
+                #4ade80 360deg
+            );
+            filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.5));
+        }
+
+        .inner {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .time {
+            font-size: 58px;
+            font-weight: 200;
+            color: #fff;
+            letter-spacing: 2px;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            line-height: 1;
+        }
+
+        .label {
+            margin-top: 10px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 2px;
+            font-weight: 500;
+        }
+
+        .mode-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        body.running .mode-dot { background: #fde047; box-shadow: 0 0 8px #fde047; animation: pulse 1.5s ease-in-out infinite; }
+        body.break .mode-dot { background: #bbf7d0; box-shadow: 0 0 8px #bbf7d0; animation: pulse 1.5s ease-in-out infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.4); }
+        }
+
+        /* 按钮区 */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+        }
+
+        .btn {
+            min-width: 96px;
+            padding: 13px 22px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.22);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        .btn:active { transform: translateY(0); }
+
+        .btn-primary {
+            background: #fff;
+            color: #1f2937;
+            border-color: #fff;
+            min-width: 120px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        body.running .btn-primary {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fde047;
+            box-shadow: 0 8px 28px rgba(251, 191, 36, 0.45);
+        }
+
+        body.break .btn-primary {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #6ee7b7;
+            box-shadow: 0 8px 28px rgba(74, 222, 128, 0.45);
+        }
+
+        .btn[disabled] {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .footer {
+            margin-top: 24px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px;
+        }
+
+        /* 模式切换栏 */
+        .modes {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 26px;
+            background: rgba(0, 0, 0, 0.18);
+            border-radius: 50px;
+            padding: 5px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .mode-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 50px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .mode-btn:hover { color: #fff; }
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.92);
+            color: #1f2937;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        body.running .mode-btn.active { background: #fef3c7; color: #92400e; }
+        body.break .mode-btn.active { background: #d1fae5; color: #065f46; }
+
+        /* 已完成计数 */
+        .counter {
+            margin-top: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.75);
+            letter-spacing: 0.5px;
+        }
+        .counter-tomato {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            height: 30px;
+            padding: 0 10px;
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            color: #fff;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+        .counter-tomato.bump {
+            animation: bump 0.4s ease;
+        }
+        @keyframes bump {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.3); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.7); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 420px) {
+            .timer-wrap { width: 260px; height: 260px; }
+            .time { font-size: 50px; }
+            .btn { min-width: 80px; padding: 12px 16px; font-size: 13px; }
+            .btn-primary { min-width: 100px; }
+            .mode-btn { padding: 7px 12px; font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="title">POMODORO</div>
+
+        <div class="modes" id="modes">
+            <button class="mode-btn active" data-mode="focus">专注 25</button>
+            <button class="mode-btn" data-mode="short">短休息 5</button>
+            <button class="mode-btn" data-mode="long">长休息 15</button>
+        </div>
+
+        <div class="timer-wrap">
+            <div class="ring-bg"></div>
+            <div class="ring-progress" id="ring"></div>
+            <div class="inner">
+                <div class="time" id="time">25:00</div>
+                <div class="label"><span class="mode-dot"></span><span id="status">准备开始</span></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="resetBtn" disabled>重置</button>
+            <button class="btn btn-primary" id="startBtn">开始</button>
+        </div>
+
+        <div class="counter">
+            今日已完成
+            <span class="counter-tomato" id="counter">0</span>
+            个番茄
+        </div>
+
+        <div class="footer">专注 25 分钟，效率一整天</div>
+    </div>
+
+    <script>
+    (function () {
+        // 三种模式配置（分钟）
+        const MODES = {
+            focus: { minutes: 25, label: '专注' },
+            short: { minutes: 5,  label: '短休息' },
+            long:  { minutes: 15, label: '长休息' }
+        };
+
+        const timeEl = document.getElementById('time');
+        const ringEl = document.getElementById('ring');
+        const statusEl = document.getElementById('status');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const counterEl = document.getElementById('counter');
+        const modeBtns = document.querySelectorAll('.mode-btn');
+
+        // 当前模式总秒数
+        let mode = 'focus';
+        let totalSeconds = MODES[mode].minutes * 60;
+        let remaining = totalSeconds;
+        let timerId = null;
+        let isRunning = false;
+        let ended = false;
+
+        // 今日完成番茄数（按日期持久化）
+        const todayKey = 'pomo_count_' + new Date().toDateString();
+        let count = parseInt(localStorage.getItem(todayKey) || '0', 10);
+        counterEl.textContent = count;
+
+        function saveCount() {
+            localStorage.setItem(todayKey, String(count));
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        }
+
+        function updateProgress() {
+            const progress = remaining / totalSeconds;
+            const deg = progress * 360;
+            ringEl.style.background = 'conic-gradient(' +
+                (mode === 'focus' ? '#fde047 0deg, #fbbf24 ' : '#bbf7d0 0deg, #4ade80 ') +
+                deg + 'deg, rgba(255,255,255,0.08) ' + deg + 'deg)';
+        }
+
+        function render() {
+            timeEl.textContent = formatTime(remaining);
+            updateProgress();
+
+            document.body.classList.remove('running', 'break');
+            if (isRunning) {
+                if (mode === 'focus') document.body.classList.add('running');
+                else document.body.classList.add('break');
+            }
+
+            const label = MODES[mode].label;
+            if (ended) {
+                statusEl.textContent = (mode === 'focus') ? '时间到！' : label + '结束';
+            } else if (isRunning) {
+                statusEl.textContent = label + '中…';
+            } else {
+                statusEl.textContent = '准备' + label;
+            }
+
+            // 模式按钮高亮
+            modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+
+            startBtn.textContent = isRunning ? '暂停' : '继续';
+            if (remaining === totalSeconds && !isRunning) startBtn.textContent = '开始';
+            if (ended) startBtn.textContent = '再来一次';
+
+            resetBtn.disabled = remaining === totalSeconds && !isRunning;
+        }
+
+        function tick() {
+            if (remaining <= 0) {
+                finish();
+                return;
+            }
+            remaining--;
+            render();
+        }
+
+        function start() {
+            if (ended) {
+                ended = false;
+                remaining = totalSeconds;
+            }
+            if (isRunning) {
+                clearInterval(timerId);
+                timerId = null;
+                isRunning = false;
+                render();
+                return;
+            }
+            isRunning = true;
+            timerId = setInterval(tick, 1000);
+            render();
+        }
+
+        function reset() {
+            clearInterval(timerId);
+            timerId = null;
+            isRunning = false;
+            ended = false;
+            remaining = totalSeconds;
+            render();
+        }
+
+        function switchMode(newMode) {
+            if (newMode === mode) return;
+            clearInterval(timerId);
+            timerId = null;
+            isRunning = false;
+            ended = false;
+            mode = newMode;
+            totalSeconds = MODES[mode].minutes * 60;
+            remaining = totalSeconds;
+            render();
+        }
+
+        function finish() {
+            clearInterval(timerId);
+            timerId = null;
+            isRunning = false;
+            ended = true;
+            render();
+
+            // 专注模式完成：计数 +1 并播放 bump 动画
+            let msg;
+            if (mode === 'focus') {
+                count++;
+                saveCount();
+                counterEl.textContent = count;
+                counterEl.classList.remove('bump');
+                void counterEl.offsetWidth;
+                counterEl.classList.add('bump');
+                msg = '休息一下吧！🍅 已完成 ' + count + ' 个番茄';
+            } else {
+                msg = '专注时间到！开始下一个番茄吧';
+            }
+
+            try {
+                alert(msg);
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('番茄钟', { body: msg });
+                }
+            } catch (e) {}
+
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        startBtn.addEventListener('click', start);
+        resetBtn.addEventListener('click', reset);
+
+        modeBtns.forEach(btn => {
+            btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                start();
+            } else if (e.key === 'r' || e.key === 'R') {
+                reset();
+            } else if (e.key === '1') switchMode('focus');
+            else if (e.key === '2') switchMode('short');
+            else if (e.key === '3') switchMode('long');
+        });
+
+        render();
+    })();
+    </script>
+</body>
+</html>

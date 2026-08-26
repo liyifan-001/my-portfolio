@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexbox 学习演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: -apple-system, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .page-sub {
+            text-align: center;
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .demo-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+            border: 1px solid #f1f5f9;
+        }
+
+        .demo-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .demo-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-family: "SF Mono", "Monaco", monospace;
+        }
+
+        .demo-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .demo-desc {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .ctrl-btn {
+            padding: 6px 12px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: "SF Mono", "Monaco", monospace;
+            transition: all 0.2s ease;
+        }
+
+        .ctrl-btn:hover {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .ctrl-btn.active {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff;
+            border-color: #6366f1;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        .playground {
+            background: #f8fafc;
+            border: 2px dashed #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            min-height: 140px;
+            display: flex;
+            transition: all 0.3s ease;
+        }
+
+        .playground.fd-row { flex-direction: row; }
+        .playground.fd-col { flex-direction: column; }
+
+        .playground.jc-start { justify-content: flex-start; }
+        .playground.jc-center { justify-content: center; }
+        .playground.jc-between { justify-content: space-between; }
+        .playground.jc-around { justify-content: space-around; }
+
+        .playground.ai-start { align-items: flex-start; }
+        .playground.ai-center { align-items: center; }
+        .playground.ai-end { align-items: flex-end; }
+        .playground.ai-stretch { align-items: stretch; }
+
+        .playground.fw-nowrap { flex-wrap: nowrap; }
+        .playground.fw-wrap { flex-wrap: wrap; }
+
+        .item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 16px 20px;
+            min-width: 60px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .item-1 { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .item-2 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .item-3 { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .item-4 { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .item-5 { background: linear-gradient(135deg, #fa709a, #fee140); }
+        .item-6 { background: linear-gradient(135deg, #30cfd0, #330867); }
+
+        /* align-items 演示用 - 不同高度 */
+        .demo-ai .item-1 { height: 40px; }
+        .demo-ai .item-2 { height: 70px; }
+        .demo-ai .item-3 { height: 55px; }
+        .demo-ai .item-4 { height: 85px; }
+
+        /* flex-wrap 演示用 - 固定宽度让溢出 */
+        .demo-fw .item {
+            min-width: 90px;
+            padding: 18px 16px;
+        }
+
+        .css-hint {
+            margin-top: 14px;
+            padding: 10px 14px;
+            background: #1e293b;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-family: "SF Mono", "Monaco", monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .css-hint .prop { color: #fbbf24; }
+        .css-hint .val { color: #86efac; }
+
+        @media (max-width: 720px) {
+            .container { grid-template-columns: 1fr; }
+            body { padding: 24px 16px; }
+            .page-title { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="page-title">Flexbox 学习演示</h1>
+    <p class="page-sub">点击按钮切换效果，直观理解 Flex 布局四大核心属性</p>
+
+    <div class="container">
+        <!-- Demo 1: flex-direction -->
+        <div class="demo-card">
+            <div class="demo-header">
+                <span class="demo-tag">flex-direction</span>
+                <h3 class="demo-title">主轴方向</h3>
+            </div>
+            <p class="demo-desc">决定子元素的排列方向：水平（row）还是垂直（column）。</p>
+            <div class="controls">
+                <button class="ctrl-btn active" data-prop="fd" data-val="row">row →</button>
+                <button class="ctrl-btn" data-prop="fd" data-val="column">column ↓</button>
+            </div>
+            <div class="playground fd-row" id="fd-box">
+                <div class="item item-1">项目1</div>
+                <div class="item item-2">项目2</div>
+                <div class="item item-3">项目3</div>
+            </div>
+            <div class="css-hint">
+                .container { <span class="prop">flex-direction</span>: <span class="val" id="fd-css">row</span>; }
+            </div>
+        </div>
+
+        <!-- Demo 2: justify-content -->
+        <div class="demo-card">
+            <div class="demo-header">
+                <span class="demo-tag">justify-content</span>
+                <h3 class="demo-title">主轴对齐</h3>
+            </div>
+            <p class="demo-desc">控制子元素在主轴方向上的分布方式。</p>
+            <div class="controls">
+                <button class="ctrl-btn active" data-prop="jc" data-val="flex-start">flex-start</button>
+                <button class="ctrl-btn" data-prop="jc" data-val="center">center</button>
+                <button class="ctrl-btn" data-prop="jc" data-val="space-between">space-between</button>
+                <button class="ctrl-btn" data-prop="jc" data-val="space-around">space-around</button>
+            </div>
+            <div class="playground jc-start" id="jc-box">
+                <div class="item item-1">1</div>
+                <div class="item item-2">2</div>
+                <div class="item item-3">3</div>
+            </div>
+            <div class="css-hint">
+                .container { <span class="prop">justify-content</span>: <span class="val" id="jc-css">flex-start</span>; }
+            </div>
+        </div>
+
+        <!-- Demo 3: align-items -->
+        <div class="demo-card demo-ai">
+            <div class="demo-header">
+                <span class="demo-tag">align-items</span>
+                <h3 class="demo-title">交叉轴对齐</h3>
+            </div>
+            <p class="demo-desc">控制子元素在交叉轴（垂直方向）上的对齐方式。</p>
+            <div class="controls">
+                <button class="ctrl-btn active" data-prop="ai" data-val="flex-start">flex-start</button>
+                <button class="ctrl-btn" data-prop="ai" data-val="center">center</button>
+                <button class="ctrl-btn" data-prop="ai" data-val="flex-end">flex-end</button>
+                <button class="ctrl-btn" data-prop="ai" data-val="stretch">stretch</button>
+            </div>
+            <div class="playground ai-start" id="ai-box">
+                <div class="item item-1">1</div>
+                <div class="item item-2">2</div>
+                <div class="item item-3">3</div>
+                <div class="item item-4">4</div>
+            </div>
+            <div class="css-hint">
+                .container { <span class="prop">align-items</span>: <span class="val" id="ai-css">flex-start</span>; }
+            </div>
+        </div>
+
+        <!-- Demo 4: flex-wrap -->
+        <div class="demo-card demo-fw">
+            <div class="demo-header">
+                <span class="demo-tag">flex-wrap</span>
+                <h3 class="demo-title">是否换行</h3>
+            </div>
+            <p class="demo-desc">当一行放不下时，子元素是挤压还是换行到下一行。</p>
+            <div class="controls">
+                <button class="ctrl-btn active" data-prop="fw" data-val="nowrap">nowrap</button>
+                <button class="ctrl-btn" data-prop="fw" data-val="wrap">wrap</button>
+            </div>
+            <div class="playground fw-nowrap" id="fw-box">
+                <div class="item item-1">项目1</div>
+                <div class="item item-2">项目2</div>
+                <div class="item item-3">项目3</div>
+                <div class="item item-4">项目4</div>
+                <div class="item item-5">项目5</div>
+                <div class="item item-6">项目6</div>
+            </div>
+            <div class="css-hint">
+                .container { <span class="prop">flex-wrap</span>: <span class="val" id="fw-css">nowrap</span>; }
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        // 属性到 class 的映射
+        const CLASS_MAP = {
+            fd: { row: 'fd-row', column: 'fd-col' },
+            jc: { 'flex-start': 'jc-start', 'center': 'jc-center', 'space-between': 'jc-between', 'space-around': 'jc-around' },
+            ai: { 'flex-start': 'ai-start', 'center': 'ai-center', 'flex-end': 'ai-end', 'stretch': 'ai-stretch' },
+            fw: { nowrap: 'fw-nowrap', wrap: 'fw-wrap' }
+        };
+
+        const BOX_IDS = {
+            fd: 'fd-box', jc: 'jc-box', ai: 'ai-box', fw: 'fw-box'
+        };
+        const CSS_IDS = {
+            fd: 'fd-css', jc: 'jc-css', ai: 'ai-css', fw: 'fw-css'
+        };
+
+        document.querySelectorAll('.ctrl-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const prop = this.dataset.prop;
+                const val = this.dataset.val;
+
+                // 更新按钮高亮
+                document.querySelectorAll('.ctrl-btn[data-prop="' + prop + '"]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                // 更新效果区域
+                const box = document.getElementById(BOX_IDS[prop]);
+                const allClasses = Object.values(CLASS_MAP[prop]).flat ? Object.values(CLASS_MAP[prop]).flat() : Object.values(CLASS_MAP[prop]);
+                box.classList.remove(...allClasses);
+                box.classList.add(CLASS_MAP[prop][val]);
+
+                // 更新代码提示
+                document.getElementById(CSS_IDS[prop]).textContent = val;
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

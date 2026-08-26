@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待办事项</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+            background: #0a0a14;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 15% 20%, rgba(99, 102, 241, 0.35) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 85% 80%, rgba(236, 72, 153, 0.25) 0%, transparent 60%),
+                linear-gradient(135deg, #0a0a14 0%, #0f0f1f 50%, #14142b 100%);
+            background-attachment: fixed;
+            padding: 20px;
+            color: #e2e8f0;
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 460px;
+            background: rgba(15, 18, 36, 0.55);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 32px 28px;
+            box-shadow:
+                0 25px 80px rgba(0, 0, 0, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .header {
+            margin-bottom: 22px;
+        }
+
+        .title {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #f8fafc 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: #64748b;
+            letter-spacing: 1px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .stat {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #64748b;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat.todo .stat-value { color: #fbbf24; }
+        .stat.done .stat-value { color: #22c55e; }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .input {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input::placeholder {
+            color: #475569;
+        }
+
+        .input:focus {
+            border-color: rgba(251, 191, 36, 0.5);
+            background: rgba(255, 255, 255, 0.07);
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+        }
+
+        .add-btn {
+            padding: 0 18px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #0a0a14;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35);
+        }
+
+        .add-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
+        }
+
+        .add-btn:active { transform: translateY(0); }
+
+        .filters {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .filter {
+            padding: 6px 14px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: #94a3b8;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .filter:hover {
+            color: #cbd5e1;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter.active {
+            background: rgba(251, 191, 36, 0.15);
+            border-color: rgba(251, 191, 36, 0.5);
+            color: #fbbf24;
+        }
+
+        .list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .list::-webkit-scrollbar { width: 6px; }
+        .list::-webkit-scrollbar-track { background: transparent; }
+        .list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            animation: slideIn 0.25s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .checkbox {
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 7px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox:hover {
+            border-color: #fbbf24;
+        }
+
+        .item.done .checkbox {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-color: #22c55e;
+        }
+
+        .checkbox svg {
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s ease;
+        }
+
+        .item.done .checkbox svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .text {
+            flex: 1;
+            font-size: 14px;
+            color: #e2e8f0;
+            line-height: 1.4;
+            word-break: break-word;
+            transition: all 0.2s ease;
+        }
+
+        .item.done .text {
+            color: #64748b;
+            text-decoration: line-through;
+        }
+
+        .del {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            background: transparent;
+            border: none;
+            border-radius: 7px;
+            color: #64748b;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .del:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        .empty-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            opacity: 0.4;
+        }
+
+        .clear-bar {
+            margin-top: 14px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .clear-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .clear-btn:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        /* 提醒横幅 */
+        .banner {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(236, 72, 153, 0.12));
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            border-radius: 14px;
+            margin-bottom: 16px;
+            animation: slideDown 0.3s ease;
+        }
+        .banner.show { display: flex; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .banner-icon {
+            flex-shrink: 0;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #0a0a14;
+            font-weight: 700;
+        }
+        .banner-body {
+            flex: 1;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .banner-title {
+            color: #fbbf24;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .banner-text { color: #cbd5e1; }
+        .banner-close {
+            flex-shrink: 0;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: inherit;
+            line-height: 1;
+        }
+        .banner-close:hover { color: #e2e8f0; background: rgba(255,255,255,0.08); }
+
+        /* 设置条 */
+        .settings {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .settings-label {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .time-input {
+            padding: 5px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            width: 80px;
+        }
+        .time-input:focus { border-color: rgba(251, 191, 36, 0.5); }
+        .notify-btn {
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #cbd5e1;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            margin-left: auto;
+        }
+        .notify-btn:hover { color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); }
+        .notify-btn.on { color: #22c55e; border-color: rgba(34, 197, 94, 0.4); }
+
+        @media (max-width: 480px) {
+            .app { padding: 24px 20px; }
+            .title { font-size: 22px; }
+            .settings { gap: 8px; }
+            .notify-btn { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="banner" id="banner">
+            <div class="banner-icon">!</div>
+            <div class="banner-body">
+                <div class="banner-title" id="bannerTitle">今日待办未完成</div>
+                <div class="banner-text" id="bannerText">还有任务等你完成，加油！</div>
+            </div>
+            <button class="banner-close" id="bannerClose">×</button>
+        </div>
+
+        <div class="header">
+            <h1 class="title">待办事项</h1>
+            <div class="subtitle">TODO LIST</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat todo">
+                <div class="stat-label">待办</div>
+                <div class="stat-value" id="todoCount">0</div>
+            </div>
+            <div class="stat done">
+                <div class="stat-label">已完成</div>
+                <div class="stat-value" id="doneCount">0</div>
+            </div>
+        </div>
+
+        <div class="input-row">
+            <input type="text" class="input" id="input" placeholder="输入任务后按回车添加…" maxlength="100">
+            <button class="add-btn" id="addBtn">+</button>
+        </div>
+
+        <div class="filters">
+            <button class="filter active" data-filter="all">全部</button>
+            <button class="filter" data-filter="todo">待办</button>
+            <button class="filter" data-filter="done">已完成</button>
+        </div>
+
+        <ul class="list" id="list"></ul>
+
+        <div class="clear-bar">
+            <button class="clear-btn" id="clearBtn">清除已完成</button>
+        </div>
+
+        <div class="settings">
+            <span class="settings-label">每日提醒时间</span>
+            <input type="time" class="time-input" id="remindTime" value="22:00">
+            <button class="notify-btn" id="notifyBtn">开启桌面通知</button>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const input = document.getElementById('input');
+        const addBtn = document.getElementById('addBtn');
+        const list = document.getElementById('list');
+        const todoCount = document.getElementById('todoCount');
+        const doneCount = document.getElementById('doneCount');
+        const filterBtns = document.querySelectorAll('.filter');
+        const clearBtn = document.getElementById('clearBtn');
+        const banner = document.getElementById('banner');
+        const bannerTitle = document.getElementById('bannerTitle');
+        const bannerText = document.getElementById('bannerText');
+        const bannerClose = document.getElementById('bannerClose');
+        const remindTimeInput = document.getElementById('remindTime');
+        const notifyBtn = document.getElementById('notifyBtn');
+
+        // 日期工具：返回 YYYY-MM-DD
+        function todayStr() {
+            const d = new Date();
+            return d.getFullYear() + '-' +
+                   String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                   String(d.getDate()).padStart(2, '0');
+        }
+
+        let todos = JSON.parse(localStorage.getItem('todos') || '[]');
+        // 数据迁移：旧数据补 date 字段（视为今天）
+        todos.forEach(t => { if (!t.date) t.date = todayStr(); });
+
+        let filter = 'all';
+
+        // 提醒设置
+        let settings = JSON.parse(localStorage.getItem('todo_settings') || '{}');
+        if (!settings.remindTime) settings.remindTime = '22:00';
+        remindTimeInput.value = settings.remindTime;
+        // 当天是否已弹过定时提醒（防止重复）
+        let lastRemindDate = localStorage.getItem('todo_last_remind') || '';
+
+        function save() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+        function saveSettings() {
+            localStorage.setItem('todo_settings', JSON.stringify(settings));
+        }
+
+        // 当日未完成待办
+        function todayPending() {
+            const today = todayStr();
+            return todos.filter(t => t.date === today && !t.done);
+        }
+
+        // 显示横幅提醒
+        function showBanner(title, text) {
+            bannerTitle.textContent = title;
+            bannerText.textContent = text;
+            banner.classList.add('show');
+        }
+        function hideBanner() { banner.classList.remove('show'); }
+
+        // 系统通知
+        function notify(title, body) {
+            if (!('Notification' in window)) return;
+            if (Notification.permission !== 'granted') return;
+            try {
+                new Notification(title, { body: body, icon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text y="52" font-size="52">📝</text></svg>') });
+            } catch (e) {}
+        }
+
+        // 检查并发起提醒
+        function checkAndRemind(reason) {
+            const pending = todayPending();
+            if (pending.length === 0) {
+                hideBanner();
+                return false;
+            }
+            const names = pending.slice(0, 2).map(t => t.text).join('、');
+            const more = pending.length > 2 ? (' 等' + pending.length + '项') : '';
+            const text = '剩余 ' + pending.length + ' 项未完成：' + names + more;
+
+            // 'scheduled' 为定时触发，每个日期只通知一次
+            if (reason === 'scheduled') {
+                if (lastRemindDate === todayStr()) return true;
+                lastRemindDate = todayStr();
+                localStorage.setItem('todo_last_remind', lastRemindDate);
+                notify('今日待办未完成', text);
+            }
+            // 横幅总是显示
+            showBanner('今日还有 ' + pending.length + ' 项待办', text);
+            return true;
+        }
+
+        function render() {
+            // 当日归档：渲染前不动数据，但提醒基于今日
+            const filtered = todos.filter(t => {
+                if (filter === 'todo') return !t.done;
+                if (filter === 'done') return t.done;
+                return true;
+            });
+
+            list.innerHTML = '';
+
+            if (filtered.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'empty';
+                empty.innerHTML = '<div class="empty-icon">✦</div>' +
+                    (filter === 'done' ? '还没有完成的任务' :
+                     filter === 'todo' ? '没有待办任务，干得漂亮' :
+                     '还没有任务，添加一个吧');
+                list.appendChild(empty);
+            } else {
+                filtered.forEach(t => {
+                    const li = document.createElement('li');
+                    li.className = 'item' + (t.done ? ' done' : '');
+                    li.dataset.id = t.id;
+
+                    const cb = document.createElement('div');
+                    cb.className = 'checkbox';
+                    cb.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+                    const text = document.createElement('div');
+                    text.className = 'text';
+                    text.textContent = t.text;
+
+                    const del = document.createElement('button');
+                    del.className = 'del';
+                    del.innerHTML = '×';
+                    del.title = '删除';
+
+                    cb.addEventListener('click', () => toggle(t.id));
+                    del.addEventListener('click', () => remove(t.id));
+
+                    li.appendChild(cb);
+                    li.appendChild(text);
+                    li.appendChild(del);
+                    list.appendChild(li);
+                });
+            }
+
+            const todoN = todos.filter(t => !t.done).length;
+            const doneN = todos.filter(t => t.done).length;
+            todoCount.textContent = todoN;
+            doneCount.textContent = doneN;
+
+            // 渲染后同步刷新提醒状态（不弹通知，仅同步横幅）
+            const pending = todayPending();
+            if (pending.length > 0) {
+                const names = pending.slice(0, 2).map(t => t.text).join('、');
+                const more = pending.length > 2 ? (' 等' + pending.length + '项') : '';
+                showBanner('今日还有 ' + pending.length + ' 项待办', '剩余 ' + pending.length + ' 项：' + names + more);
+            } else {
+                hideBanner();
+            }
+        }
+
+        function add() {
+            const text = input.value.trim();
+            if (!text) return;
+            todos.unshift({
+                id: Date.now() + Math.random().toString(36).slice(2, 6),
+                text: text,
+                done: false,
+                date: todayStr()
+            });
+            input.value = '';
+            save();
+            render();
+        }
+
+        function toggle(id) {
+            const t = todos.find(t => t.id === id);
+            if (t) {
+                t.done = !t.done;
+                save();
+                render();
+            }
+        }
+
+        function remove(id) {
+            todos = todos.filter(t => t.id !== id);
+            save();
+            render();
+        }
+
+        function clearDone() {
+            todos = todos.filter(t => !t.done);
+            save();
+            render();
+        }
+
+        // 输入
+        addBtn.addEventListener('click', add);
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') add();
+        });
+
+        // 筛选
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filter = btn.dataset.filter;
+                filterBtns.forEach(b => b.classList.toggle('active', b === btn));
+                render();
+            });
+        });
+
+        clearBtn.addEventListener('click', clearDone);
+        bannerClose.addEventListener('click', hideBanner);
+
+        // 提醒时间设置
+        remindTimeInput.addEventListener('change', () => {
+            settings.remindTime = remindTimeInput.value || '22:00';
+            remindTimeInput.value = settings.remindTime;
+            saveSettings();
+            // 改了时间则允许当天再次定时提醒
+            lastRemindDate = '';
+            localStorage.setItem('todo_last_remind', '');
+        });
+
+        // 桌面通知开关
+        function updateNotifyBtn() {
+            if (!('Notification' in window)) {
+                notifyBtn.textContent = '不支持通知';
+                notifyBtn.disabled = true;
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                notifyBtn.textContent = '通知已开启';
+                notifyBtn.classList.add('on');
+            } else if (Notification.permission === 'denied') {
+                notifyBtn.textContent = '通知被拒绝';
+                notifyBtn.classList.remove('on');
+            } else {
+                notifyBtn.textContent = '开启桌面通知';
+                notifyBtn.classList.remove('on');
+            }
+        }
+        notifyBtn.addEventListener('click', () => {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'default') {
+                Notification.requestPermission().then(updateNotifyBtn);
+            } else if (Notification.permission === 'granted') {
+                // 测试一条
+                notify('通知已开启', '当日待办未完成时会在这里提醒你');
+            } else {
+                alert('浏览器通知已被拒绝，请在浏览器设置中重新允许此网站的通知权限。');
+            }
+        });
+        updateNotifyBtn();
+
+        // 离开页面前提醒（原生确认，仅当天有未完成时）
+        window.addEventListener('beforeunload', e => {
+            if (todayPending().length > 0) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+
+        // 切回前台时检查
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                checkAndRemind('visible');
+            }
+        });
+
+        // 定时检查（每 30 秒）：到点且当天未通知过则推送
+        setInterval(() => {
+            if (document.visibilityState === 'hidden') return; // 后台由通知负责
+            const now = new Date();
+            const cur = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            const [rh, rm] = settings.remindTime.split(':').map(n => parseInt(n, 10));
+            // 当前时间 >= 提醒时间
+            if (now.getHours() > rh || (now.getHours() === rh && now.getMinutes() >= rm)) {
+                checkAndRemind('scheduled');
+            }
+        }, 30000);
+
+        // 页面加载完先检查一次（不弹通知，仅同步横幅）
+        render();
+        checkAndRemind('visible');
+    })();
+    </script>
+</body>
+</html>

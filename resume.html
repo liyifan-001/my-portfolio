@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人简历</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .resume {
+            max-width: 820px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 50px rgba(15, 23, 42, 0.12);
+            display: grid;
+            grid-template-columns: 260px 1fr;
+        }
+
+        /* 左侧侧栏 */
+        .sidebar {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 36px 28px;
+        }
+
+        .avatar {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #334155, #1e293b);
+            border: 3px solid #38bdf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .avatar .placeholder {
+            text-align: center;
+            color: #64748b;
+        }
+
+        .avatar .placeholder .icon {
+            font-size: 42px;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .avatar .placeholder .text {
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-name {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 6px;
+        }
+
+        .sidebar-job {
+            text-align: center;
+            font-size: 13px;
+            color: #38bdf8;
+            letter-spacing: 1px;
+            margin-bottom: 28px;
+        }
+
+        .contact-block {
+            margin-bottom: 24px;
+        }
+
+        .contact-title {
+            font-size: 11px;
+            color: #64748b;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .contact-item .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #38bdf8;
+            flex-shrink: 0;
+        }
+
+        .skills-block .skill-item {
+            margin-bottom: 12px;
+        }
+
+        .skill-name {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #cbd5e1;
+            margin-bottom: 5px;
+        }
+
+        .skill-name .pct {
+            color: #64748b;
+        }
+
+        .skill-bar {
+            height: 5px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .skill-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+            border-radius: 3px;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: #38bdf8;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        /* 右侧主区 */
+        .main {
+            padding: 40px 36px;
+        }
+
+        .target {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-left: 3px solid #0ea5e9;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+
+        .target-label {
+            font-size: 11px;
+            color: #0ea5e9;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .target-text {
+            font-size: 17px;
+            font-weight: 600;
+            color: #0c4a6e;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 18px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .section-title::before {
+            content: "";
+            width: 4px;
+            height: 18px;
+            background: linear-gradient(180deg, #38bdf8, #0ea5e9);
+            border-radius: 2px;
+        }
+
+        /* 教育背景 */
+        .edu-item {
+            position: relative;
+            padding-left: 22px;
+            padding-bottom: 18px;
+            border-left: 2px solid #e2e8f0;
+            margin-left: 4px;
+        }
+
+        .edu-item:last-child {
+            padding-bottom: 0;
+            border-left-color: transparent;
+        }
+
+        .edu-item::before {
+            content: "";
+            position: absolute;
+            left: -6px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #38bdf8;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #e0f2fe;
+        }
+
+        .edu-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .edu-school {
+            font-size: 15px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .edu-time {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .edu-major {
+            font-size: 13px;
+            color: #0ea5e9;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .edu-desc {
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        /* 自我介绍 */
+        .intro-text {
+            font-size: 14px;
+            color: #334155;
+            line-height: 1.9;
+            text-align: justify;
+        }
+
+        /* 技能 - 右侧补充 */
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px 20px;
+        }
+
+        .skill-line {
+            font-size: 13px;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .skill-line::before {
+            content: "▸";
+            color: #38bdf8;
+            font-size: 10px;
+        }
+
+        /* 项目经历 */
+        .project-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 3px solid #38bdf8;
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            transition: all 0.2s ease;
+        }
+        .project-item:last-child { margin-bottom: 0; }
+        .project-item:hover {
+            border-left-color: #0ea5e9;
+            box-shadow: 0 4px 16px rgba(56, 189, 248, 0.12);
+            transform: translateY(-1px);
+        }
+        .project-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .project-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .project-time {
+            font-size: 12px;
+            color: #64748b;
+        }
+        .project-role {
+            display: inline-block;
+            font-size: 12px;
+            color: #0ea5e9;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 2px 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        .project-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .project-list li {
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.6;
+            padding-left: 16px;
+            position: relative;
+        }
+        .project-list li::before {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 8px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #38bdf8;
+        }
+
+        /* 导出按钮 */
+        .export-bar {
+            max-width: 820px;
+            margin: 16px auto 0;
+            text-align: center;
+        }
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 28px;
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);
+            transition: all 0.2s ease;
+        }
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(14, 165, 233, 0.5);
+        }
+        .export-btn:active { transform: translateY(0); }
+        .export-btn svg { width: 16px; height: 16px; }
+
+        @media (max-width: 700px) {
+            body { padding: 16px 8px; }
+            .resume {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                padding: 28px 24px;
+            }
+            .main {
+                padding: 28px 22px;
+            }
+            .skill-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 打印样式 */
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .export-bar { display: none; }
+            .resume {
+                box-shadow: none;
+                border-radius: 0;
+                max-width: 100%;
+            }
+            .project-item:hover {
+                transform: none;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="resume">
+        <!-- 左侧：照片 + 联系方式 + 技能 -->
+        <aside class="sidebar">
+            <div class="avatar">
+                <div class="placeholder">
+                    <div class="icon">👤</div>
+                    <div class="text">个人照片</div>
+                </div>
+            </div>
+
+            <div class="sidebar-name">张明</div>
+            <div class="sidebar-job">产品经理实习生</div>
+
+            <div class="contact-block">
+                <div class="contact-title">联系方式</div>
+                <div class="contact-item"><span class="dot"></span>138-xxxx-xxxx</div>
+                <div class="contact-item"><span class="dot"></span>zhangming@email.com</div>
+                <div class="contact-item"><span class="dot"></span>北京 · 海淀区</div>
+            </div>
+
+            <div class="contact-block skills-block">
+                <div class="contact-title">核心技能</div>
+                <div class="skill-item">
+                    <div class="skill-name"><span>Axure / Figma</span><span class="pct">90%</span></div>
+                    <div class="skill-bar"><div class="skill-fill" style="width:90%"></div></div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name"><span>需求分析</span><span class="pct">85%</span></div>
+                    <div class="skill-bar"><div class="skill-fill" style="width:85%"></div></div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name"><span>SQL 数据分析</span><span class="pct">75%</span></div>
+                    <div class="skill-bar"><div class="skill-fill" style="width:75%"></div></div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name"><span>竞品调研</span><span class="pct">80%</span></div>
+                    <div class="skill-bar"><div class="skill-fill" style="width:80%"></div></div>
+                </div>
+            </div>
+
+            <div class="contact-block">
+                <div class="contact-title">工具 & 标签</div>
+                <div class="tag-list">
+                    <span class="tag">Axure</span>
+                    <span class="tag">Figma</span>
+                    <span class="tag">墨刀</span>
+                    <span class="tag">Visio</span>
+                    <span class="tag">Xmind</span>
+                    <span class="tag">SQL</span>
+                    <span class="tag">Python</span>
+                    <span class="tag">Excel</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 右侧：求职意向 + 教育 + 自我介绍 -->
+        <main class="main">
+            <div class="target">
+                <div class="target-label">求职意向</div>
+                <div class="target-text">互联网产品经理实习生</div>
+            </div>
+
+            <section class="section">
+                <h2 class="section-title">教育背景</h2>
+
+                <div class="edu-item">
+                    <div class="edu-head">
+                        <div class="edu-school">北京某某大学</div>
+                        <div class="edu-time">2022.09 — 2026.06</div>
+                    </div>
+                    <div class="edu-major">信息管理与信息系统 · 本科</div>
+                    <div class="edu-desc">主修课程：产品经理实务、用户研究、数据可视化、交互设计、数据库原理、统计学。GPA 3.7/4.0，专业排名前 15%。</div>
+                </div>
+
+                <div class="edu-item">
+                    <div class="edu-head">
+                        <div class="edu-school">某某高级中学</div>
+                        <div class="edu-time">2019.09 — 2022.06</div>
+                    </div>
+                    <div class="edu-major">理科</div>
+                    <div class="edu-desc">校学生会宣传部部长，组织多场校级活动，具备一定的活动策划与团队协作经验。</div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">技能特长</h2>
+                <div class="skill-grid">
+                    <div class="skill-line">原型设计：Axure / Figma / 墨刀</div>
+                    <div class="skill-line">流程图绘制：Visio / ProcessOn</div>
+                    <div class="skill-line">数据分析：SQL / Excel / Python</div>
+                    <div class="skill-line">思维导图：Xmind / 幕布</div>
+                    <div class="skill-line">文档撰写：PRD / BRD / 竞品分析</div>
+                    <div class="skill-line">用户研究：访谈 / 问卷 / 可用性测试</div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">自我介绍</h2>
+                <p class="intro-text">
+                    我是一名对互联网产品充满热情的在校大学生，立志成为一名优秀的产品经理。在校期间系统学习了产品经理相关课程，能够独立完成需求分析、原型设计、PRD 撰写等完整的产品工作流。具备较强的逻辑思维与同理心，善于从用户视角发现问题，并用数据支撑决策。曾参与校园产品的从 0 到 1 设计，主导了需求调研、功能规划与原型落地，对产品全生命周期有实际体感。
+                    <br><br>
+                    我注重细节，有强烈的责任心和执行力，能在快节奏环境中高效产出。希望能在贵公司的实习岗位上，把课堂所学应用到真实业务中，与团队一起打造有价值的产品，也让自己在实战中快速成长。
+                </p>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">项目经历</h2>
+
+                <div class="project-item">
+                    <div class="project-head">
+                        <div class="project-name">校园二手交易平台</div>
+                        <div class="project-time">2024.03 — 2024.06</div>
+                    </div>
+                    <div class="project-role">产品负责人</div>
+                    <ul class="project-list">
+                        <li>主导从 0 到 1 的产品设计，完成用户调研 30 人次，输出需求文档与高保真原型，覆盖 8 个核心功能模块。</li>
+                        <li>组织 5 次可用性测试，迭代 3 版原型，将核心交易路径操作步数从 7 步优化至 4 步。</li>
+                        <li>上线后 2 个月内积累注册用户 1200+，日活 200+，促成交易 80 余单。</li>
+                    </ul>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-head">
+                        <div class="project-name">大学生课程表小程序</div>
+                        <div class="project-time">2023.09 — 2023.12</div>
+                    </div>
+                    <div class="project-role">产品助理</div>
+                    <ul class="project-list">
+                        <li>协助产品经理完成竞品分析，横向对比 6 款同类小程序，输出差异化定位报告。</li>
+                        <li>撰写 PRD 并与 2 名开发、1 名设计协作，跟进每周迭代评审，确保需求按期落地。</li>
+                        <li>设计课后习题推荐功能，依据问卷数据调整推荐逻辑，使用户留存率提升 18%。</li>
+                    </ul>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-head">
+                        <div class="project-name">校园外卖配送数据分析</div>
+                        <div class="project-time">2023.03 — 2023.05</div>
+                    </div>
+                    <div class="project-role">数据分析师（课程项目）</div>
+                    <ul class="project-list">
+                        <li>使用 SQL 清洗 5 万条订单数据，分析高峰时段、热门品类与配送时长分布。</li>
+                        <li>用 Python 进行可视化建模，输出 3 份分析报告，提出优化配送路径的 2 条建议。</li>
+                        <li>项目获课程优秀评级，分析结论被老师作为案例在课堂展示。</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="export-bar">
+        <button class="export-btn" id="exportBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 9V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v5"/>
+                <path d="M6 12h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2z"/>
+                <path d="M10 16h4"/>
+            </svg>
+            导出 PDF
+        </button>
+    </div>
+
+    <script>
+    (function () {
+        const btn = document.getElementById('exportBtn');
+        btn.addEventListener('click', function () {
+            window.print();
+        });
+    })();
+    </script>
+</body>
+</html>

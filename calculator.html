@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0a0a14;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 15% 20%, rgba(99, 102, 241, 0.30) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 85% 80%, rgba(236, 72, 153, 0.22) 0%, transparent 60%),
+                linear-gradient(135deg, #0a0a14 0%, #0f0f1f 50%, #14142b 100%);
+            background-attachment: fixed;
+            padding: 20px;
+        }
+
+        .calc {
+            width: 100%;
+            max-width: 340px;
+            background: rgba(15, 18, 36, 0.55);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
+            padding: 22px 18px 26px;
+            box-shadow:
+                0 25px 80px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        /* 显示屏 */
+        .display {
+            text-align: right;
+            padding: 28px 18px 22px;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+
+        .history {
+            font-size: 18px;
+            color: #64748b;
+            min-height: 22px;
+            font-weight: 400;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+            word-break: break-all;
+            max-width: 100%;
+        }
+
+        .current {
+            font-size: 56px;
+            font-weight: 300;
+            color: #f8fafc;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            word-break: break-all;
+            max-width: 100%;
+            transition: font-size 0.15s ease;
+        }
+
+        .current.small { font-size: 38px; }
+        .current.tiny  { font-size: 28px; }
+
+        /* 按键区 */
+        .pad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .btn {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 50%;
+            font-size: 26px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            color: #f8fafc;
+            background: rgba(255, 255, 255, 0.08);
+            transition: background 0.15s ease, transform 0.08s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:active {
+            transform: scale(0.92);
+            filter: brightness(1.4);
+        }
+
+        .btn:hover { background: rgba(255, 255, 255, 0.14); }
+
+        /* 数字 0 横跨两列 */
+        .btn.zero {
+            grid-column: span 2;
+            aspect-ratio: auto;
+            border-radius: 40px;
+            justify-content: flex-start;
+            padding-left: 30px;
+        }
+
+        /* 功能键（浅灰） */
+        .btn.fn {
+            background: rgba(255, 255, 255, 0.22);
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .btn.fn:hover { background: rgba(255, 255, 255, 0.30); }
+
+        /* 运算符（橙色） */
+        .btn.op {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #0a0a14;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(251, 191, 36, 0.3);
+        }
+        .btn.op:hover { filter: brightness(1.1); }
+        .btn.op.active {
+            background: #fff;
+            color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.4);
+        }
+
+        /* 涟漪效果 */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%) scale(0);
+            pointer-events: none;
+            animation: ripple 0.5s ease-out;
+        }
+        .btn.op .ripple { background: rgba(15, 23, 42, 0.4); }
+        .btn.fn .ripple { background: rgba(15, 23, 42, 0.3); }
+
+        @keyframes ripple {
+            to {
+                transform: translate(-50%, -50%) scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        /* 等号闪一下 */
+        .btn.equals-flash {
+            animation: equalsFlash 0.4s ease;
+        }
+        @keyframes equalsFlash {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.15); filter: brightness(1.5); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 360px) {
+            .current { font-size: 44px; }
+            .btn { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="calc">
+        <div class="display">
+            <div class="history" id="history"></div>
+            <div class="current" id="current">0</div>
+        </div>
+        <div class="pad" id="pad">
+            <button class="btn fn" data-action="clear">AC</button>
+            <button class="btn fn" data-action="negate">±</button>
+            <button class="btn fn" data-action="percent">%</button>
+            <button class="btn op" data-op="/">÷</button>
+
+            <button class="btn" data-num="7">7</button>
+            <button class="btn" data-num="8">8</button>
+            <button class="btn" data-num="9">9</button>
+            <button class="btn op" data-op="*">×</button>
+
+            <button class="btn" data-num="4">4</button>
+            <button class="btn" data-num="5">5</button>
+            <button class="btn" data-num="6">6</button>
+            <button class="btn op" data-op="-">−</button>
+
+            <button class="btn" data-num="1">1</button>
+            <button class="btn" data-num="2">2</button>
+            <button class="btn" data-num="3">3</button>
+            <button class="btn op" data-op="+">+</button>
+
+            <button class="btn zero" data-num="0">0</button>
+            <button class="btn" data-num=".">.</button>
+            <button class="btn op" data-action="equals">=</button>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const currentEl = document.getElementById('current');
+        const historyEl = document.getElementById('history');
+        const pad = document.getElementById('pad');
+
+        // 状态
+        let current = '0';       // 当前输入
+        let previous = null;    // 上一个操作数
+        let operator = null;     // 待执行运算符
+        let justEvaluated = false; // 刚刚按了等号
+        let waitingForOperand = false; // 等待输入新操作数
+
+        const OP_SYMBOL = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+
+        function formatDisplay(numStr) {
+            // numStr 是字符串形式的数字
+            if (numStr === 'Error') return numStr;
+            // 分离整数和小数
+            let [intPart, decPart] = numStr.split('.');
+            // 处理负号
+            let neg = false;
+            if (intPart.startsWith('-')) { neg = true; intPart = intPart.slice(1); }
+            // 千分位
+            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            let out = (neg ? '-' : '') + intPart;
+            if (decPart !== undefined) out += '.' + decPart;
+            return out;
+        }
+
+        function render() {
+            let disp = current;
+            // 截断过长小数
+            if (disp !== 'Error' && disp !== '-' && disp.indexOf('.') >= 0) {
+                // 保留最多 12 位有效小数
+                const [a, b] = disp.split('.');
+                if (b.length > 12) disp = a + '.' + b.slice(0, 12);
+            }
+            currentEl.textContent = formatDisplay(disp);
+
+            // 自适应字号
+            currentEl.classList.remove('small', 'tiny');
+            const len = currentEl.textContent.length;
+            if (len > 9) currentEl.classList.add('small');
+            if (len > 13) currentEl.classList.add('tiny');
+
+            // 历史区
+            if (previous !== null && operator) {
+                historyEl.textContent = formatDisplay(String(previous)) + ' ' + OP_SYMBOL[operator];
+            } else if (justEvaluated) {
+                // 保留等号前的表达式，由 equals 时设置
+            } else {
+                historyEl.textContent = '';
+            }
+
+            // 运算符高亮
+            document.querySelectorAll('.btn.op').forEach(b => {
+                b.classList.toggle('active', waitingForOperand && b.dataset.op === operator);
+            });
+        }
+
+        function inputNumber(n) {
+            if (current === 'Error') clearAll();
+            if (waitingForOperand || justEvaluated) {
+                current = n;
+                waitingForOperand = false;
+                if (justEvaluated) {
+                    previous = null;
+                    operator = null;
+                    justEvaluated = false;
+                    historyEl.textContent = '';
+                }
+                if (n === '.') current = '0.';
+                render();
+                return;
+            }
+            if (n === '.') {
+                if (current.indexOf('.') >= 0) return;
+                current = current + '.';
+            } else {
+                if (current === '0') current = n;
+                else current = current + n;
+            }
+            render();
+        }
+
+        function chooseOp(op) {
+            if (current === 'Error') return;
+            // 如果上一步刚算完，把结果作为 previous
+            if (justEvaluated) {
+                previous = parseFloat(current);
+                justEvaluated = false;
+            } else if (previous !== null && operator && !waitingForOperand) {
+                // 连续运算：先算掉上一个
+                const result = compute(previous, parseFloat(current), operator);
+                previous = (typeof result === 'number') ? result : 0;
+                current = (typeof result === 'number') ? String(result) : 'Error';
+            } else {
+                previous = parseFloat(current);
+            }
+            operator = op;
+            waitingForOperand = true;
+            render();
+        }
+
+        function compute(a, b, op) {
+            let r;
+            switch (op) {
+                case '+': r = a + b; break;
+                case '-': r = a - b; break;
+                case '*': r = a * b; break;
+                case '/':
+                    if (b === 0) return 'Error';
+                    r = a / b; break;
+                default: return b;
+            }
+            // 修正浮点误差
+            r = Math.round((r + Number.EPSILON) * 1e12) / 1e12;
+            return r;
+        }
+
+        function equals() {
+            if (operator === null || previous === null) return;
+            if (waitingForOperand) return; // 没输入第二个数
+            const b = parseFloat(current);
+            const result = compute(previous, b, operator);
+            if (result === 'Error') {
+                historyEl.textContent = '';
+                current = 'Error';
+            } else {
+                historyEl.textContent = formatDisplay(String(previous)) + ' ' + OP_SYMBOL[operator] + ' ' + formatDisplay(String(b)) + ' =';
+                current = String(result);
+            }
+            previous = null;
+            operator = null;
+            waitingForOperand = false;
+            justEvaluated = true;
+            render();
+            // 等号闪烁
+            const eqBtn = pad.querySelector('[data-action="equals"]');
+            eqBtn.classList.remove('equals-flash');
+            void eqBtn.offsetWidth;
+            eqBtn.classList.add('equals-flash');
+        }
+
+        function clearAll() {
+            current = '0';
+            previous = null;
+            operator = null;
+            waitingForOperand = false;
+            justEvaluated = false;
+            historyEl.textContent = '';
+            render();
+        }
+
+        function negate() {
+            if (current === '0' || current === 'Error') return;
+            if (current.startsWith('-')) current = current.slice(1);
+            else current = '-' + current;
+            render();
+        }
+
+        function percent() {
+            if (current === 'Error') return;
+            let v = parseFloat(current);
+            // 若有 previous 和 operator，百分比相对于 previous
+            if (previous !== null && operator && (operator === '+' || operator === '-')) {
+                v = previous * v / 100;
+            } else {
+                v = v / 100;
+            }
+            current = String(v);
+            render();
+        }
+
+        // 涟漪效果
+        function addRipple(btn, e) {
+            const rect = btn.getBoundingClientRect();
+            const cx = (e && e.clientX !== undefined) ? e.clientX - rect.left : rect.width / 2;
+            const cy = (e && e.clientY !== undefined) ? e.clientY - rect.top : rect.height / 2;
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            ripple.style.left = cx + 'px';
+            ripple.style.top = cy + 'px';
+            const size = Math.max(rect.width, rect.height) * 0.8;
+            ripple.style.width = ripple.style.height = size + 'px';
+            btn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 500);
+        }
+
+        // 点击处理
+        pad.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn');
+            if (!btn) return;
+            addRipple(btn, e);
+
+            if (btn.dataset.num !== undefined) {
+                inputNumber(btn.dataset.num);
+            } else if (btn.dataset.op !== undefined) {
+                chooseOp(btn.dataset.op);
+            } else if (btn.dataset.action === 'equals') {
+                equals();
+            } else if (btn.dataset.action === 'clear') {
+                clearAll();
+            } else if (btn.dataset.action === 'negate') {
+                negate();
+            } else if (btn.dataset.action === 'percent') {
+                percent();
+            }
+        });
+
+        // 键盘支持
+        document.addEventListener('keydown', function (e) {
+            const k = e.key;
+            let target = null;
+            if (/^[0-9]$/.test(k)) target = pad.querySelector('[data-num="' + k + '"]');
+            else if (k === '.') target = pad.querySelector('[data-num="."]');
+            else if (k === '+' || k === '-' || k === '*' || k === '/') target = pad.querySelector('[data-op="' + k + '"]');
+            else if (k === 'Enter' || k === '=') target = pad.querySelector('[data-action="equals"]');
+            else if (k === 'Escape' || k.toLowerCase() === 'c') target = pad.querySelector('[data-action="clear"]');
+            else if (k === '%') target = pad.querySelector('[data-action="percent"]');
+            else if (k === 'Backspace') {
+                // 退格
+                if (current === 'Error') clearAll();
+                else if (!waitingForOperand && !justEvaluated) {
+                    current = current.length > 1 ? current.slice(0, -1) : '0';
+                    if (current === '-' || current === '-0') current = '0';
+                    render();
+                }
+                return;
+            }
+            if (target) {
+                e.preventDefault();
+                target.click();
+            }
+        });
+
+        render();
+    })();
+    </script>
+</body>
+</html>
