@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的作品集 · 项目导航</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: #0f172a;
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse 60% 50% at 15% 10%, rgba(99, 102, 241, 0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 85% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 40% at 50% 90%, rgba(236, 72, 153, 0.12) 0%, transparent 60%),
+                linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        .container {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ===== Hero ===== */
+        .hero {
+            padding: 80px 0 50px;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #6366f1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-sub {
+            font-size: 17px;
+            color: #64748b;
+            max-width: 540px;
+            margin: 0 auto 32px;
+            line-height: 1.7;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        /* ===== Sections ===== */
+        .section {
+            padding: 40px 0;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .section-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .section-count {
+            font-size: 12px;
+            color: #94a3b8;
+            background: #f1f5f9;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-weight: 600;
+        }
+
+        /* ===== Cards Grid ===== */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        /* ===== Card ===== */
+        .card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent, #6366f1), transparent);
+            opacity: 0;
+            transition: opacity 0.35s;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 1.5px;
+            background: linear-gradient(135deg, var(--accent, #6366f1), transparent 60%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.35s;
+            pointer-events: none;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+        }
+
+        .card:hover::before { opacity: 1; }
+        .card:hover::after { opacity: 1; }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: linear-gradient(135deg, var(--bg-from, #ede9fe), var(--bg-to, #ddd6fe));
+            color: var(--accent, #6366f1);
+            transition: transform 0.35s;
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.08) rotate(-4deg);
+        }
+
+        .card-body {
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 8px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .card-tag {
+            font-size: 12px;
+            color: var(--accent, #6366f1);
+            font-weight: 600;
+            background: var(--tag-bg, rgba(99, 102, 241, 0.1));
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .card-arrow {
+            font-size: 18px;
+            color: #94a3b8;
+            transition: all 0.3s;
+        }
+
+        .card:hover .card-arrow {
+            color: var(--accent, #6366f1);
+            transform: translateX(4px);
+        }
+
+        /* ===== Accent Variants ===== */
+        .accent-indigo { --accent: #6366f1; --bg-from: #ede9fe; --bg-to: #ddd6fe; --tag-bg: rgba(99, 102, 241, 0.1); }
+        .accent-pink    { --accent: #ec4899; --bg-from: #fce7f3; --bg-to: #fbcfe8; --tag-bg: rgba(236, 72, 153, 0.1); }
+        .accent-cyan    { --accent: #06b6d4; --bg-from: #cffafe; --bg-to: #a5f3fc; --tag-bg: rgba(6, 182, 212, 0.1); }
+        .accent-amber   { --accent: #f59e0b; --bg-from: #fef3c7; --bg-to: #fde68a; --tag-bg: rgba(245, 158, 11, 0.1); }
+        .accent-emerald { --accent: #10b981; --bg-from: #d1fae5; --bg-to: #a7f3d0; --tag-bg: rgba(16, 185, 129, 0.1); }
+        .accent-violet   { --accent: #8b5cf6; --bg-from: #ede9fe; --bg-to: #ddd6fe; --tag-bg: rgba(139, 92, 246, 0.1); }
+        .accent-rose    { --accent: #f43f5e; --bg-from: #ffe4e6; --bg-to: #fecdd3; --tag-bg: rgba(244, 63, 94, 0.1); }
+
+        /* ===== Footer ===== */
+        .footer {
+            text-align: center;
+            padding: 40px 0 50px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .footer a {
+            color: #6366f1;
+            font-weight: 600;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 640px) {
+            .hero { padding: 50px 0 30px; }
+            .hero h1 { font-size: 34px; }
+            .hero-sub { font-size: 15px; }
+            .stats { gap: 24px; }
+            .stat-num { font-size: 26px; }
+            .section-title { font-size: 19px; }
+            .grid { grid-template-columns: 1fr; gap: 16px; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="container">
+            <div class="badge">个人作品集</div>
+            <h1>我的<span class="gradient-text">作品集</span></h1>
+            <p class="hero-sub">这里收录了我做过的所有前端项目，涵盖实用工具、游戏、学习资源和作品页面。点击任意卡片即可体验。</p>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-num">7</div>
+                    <div class="stat-label">项目数量</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-num">4</div>
+                    <div class="stat-label">项目分类</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-num">100%</div>
+                    <div class="stat-label">纯前端实现</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+
+        <!-- 实用工具 -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">🛠️</div>
+                <h2 class="section-title">实用工具</h2>
+                <span class="section-count">4 个项目</span>
+            </div>
+            <div class="grid">
+                <a href="calculator.html" class="card accent-indigo">
+                    <div class="card-icon">🧮</div>
+                    <div class="card-body">
+                        <div class="card-title">计算器</div>
+                        <div class="card-desc">iPhone 风格的计算器，支持加减乘除、正负切换、百分比，带涟漪反馈动画。</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-tag">工具</span>
+                        <span class="card-arrow">→</span>
+                    </div>
+                </a>
+
+                <a href="todo.html" class="card accent-emerald">
+                    <div class="card-icon">✓</div>
+                    <div class="card-body">
+                        <div class="card-title">待办清单</div>
+                        <div class="card-desc">任务管理工具，支持添加、完成、删除、筛选，带未完成提醒和本地存储。</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-tag">效率</span>
+                        <span class="card-arrow">→</span>
+                    </div>
+                </a>
+
+                <a href="番茄钟.html" class="card accent-rose">
+                    <div class="card-icon">🍅</div>
+                    <div class="card-body">
+                        <div class="card-title">番茄钟</div>
+                        <div class="card-desc">25 分钟专注计时器，支持暂停/重置、专注/短休息/长休息切换、完成计数。</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-tag">效率</span>
+                        <span class="card-arrow">→</span>
+                    </div>
+                </a>
+
+                <a href="my-budget/ledger.html" class="card accent-amber">
+                    <div class="card-icon">💰</div>
+                    <div class="card-body">
+                        <div class="card-title">记账本</div>
+                        <div class="card-desc">日常记账工具，支持分类（餐饮/交通/购物/娱乐）、备注、月度统计、本地存储。</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-tag">财务</span>
+                        <span class="card-arrow">→</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- 学习资源 -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">📚</div>
+                <h2 class="section-title">学习资源</h2>
+                <span class="section-count">1 个项目</span>
+            </div>
+            <div class="grid">
+                <a href="FLEXbox/flexbox.html" class="card accent-cyan">
+                    <div class="card-icon">📐</div>
+                    <div class="card-body">
+                        <div class="card-title">Flexbox 布局演示</div>
+                        <div class="card-desc">交互式学习页面，演示 flex-direction、justify-content、align-items、flex-wrap 四大属性。</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-tag">学习</span>
+                        <span class="card-arrow">→</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- 个人作品 -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon">📄</div>
+                <h2 class="section-title">个人作品</h2>
+                <span class="section-count">2 个项目</span>
+            </div>
+            <div class="grid">
+                <a href="resume.html" class="card accent-violet">
+                    <div class="card-icon">👤</div>
+                    <div class="card-body">
+                        <div class="card-title">个人简历</div>
+                        <div class="card-desc">简洁专业的简历页面，含教育背景、技能特长、项目经历、自我介绍，支持导出 PDF。</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-tag">简历</span>
+                        <span class="card-arrow">→</span>
+                    </div>
+                </a>
+
+                <a href="landing.html" class="card accent-pink">
+                    <div class="card-icon">🚀</div>
+                    <div class="card-body">
+                        <div class="card-title">效率精灵落地页</div>
+                        <div class="card-desc">AI 时间管理 App 的产品落地页，含 Hero、功能特性、用户评价、定价方案、Footer。</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-tag">产品页</span>
+                        <span class="card-arrow">→</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 我的作品集 · 用 ❤️ 与纯 HTML/CSS/JS 构建</p>
+        </div>
+    </footer>
+</body>
+</html>
